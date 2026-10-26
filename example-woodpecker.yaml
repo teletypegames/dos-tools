@@ -1,0 +1,5 @@
+# One-line marker: the full pipeline is served by the update server's
+# Woodpecker configuration extension. Preview it with:
+#   curl "https://teletypegames.org/build/config?platform=dos"
+platform: dos
+# name: myprog   # only when the software name differs from the repo name

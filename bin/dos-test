@@ -1,0 +1,22 @@
+#!/bin/sh
+# Run the repo's end-to-end tests, each one it has: SOURCE/test/run.sh (DOS, in a headless
+# DOSBox Staging), SOURCE/test/runw32.sh (Win32, under Wine) and SOURCE/test/run.py
+# (DOSBox screen tests).
+set -eu
+DOS_STEP=dos-test
+. /usr/local/bin/dos-lib.sh
+
+export WATCOM="${WATCOM:-/opt/watcom}"
+ran=0
+for script in SOURCE/test/run.sh SOURCE/test/runw32.sh; do
+  [ -f "$script" ] || continue
+  say "$script"
+  DOSBOX="${DOSBOX:-/opt/dosbox-staging/dosbox}" PYTHON="${PYTHON:-python3}" sh "$script"
+  ran=1
+done
+if [ -f SOURCE/test/run.py ]; then
+  say "SOURCE/test/run.py"
+  python3 SOURCE/test/run.py
+  ran=1
+fi
+[ "$ran" = 1 ] || say "no end-to-end tests"

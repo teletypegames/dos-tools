@@ -1,0 +1,16 @@
+#!/bin/sh
+# Build the program with SOURCE/build.sh (Open Watcom in $WATCOM), then check that every
+# .EXE the metadata's file lists name is there and not empty.
+set -eu
+DOS_STEP=dos-build
+. /usr/local/bin/dos-lib.sh
+
+[ -f SOURCE/build.sh ] || die "no SOURCE/build.sh"
+WATCOM="${WATCOM:-/opt/watcom}" sh SOURCE/build.sh
+
+dos_targets | while read -r target folder; do
+  for exe in $(dos_executables "$target"); do
+    [ -s "$exe" ] || die "$exe was not built"
+    say "$exe: $(wc -c < "$exe" | tr -d ' ') bytes"
+  done
+done

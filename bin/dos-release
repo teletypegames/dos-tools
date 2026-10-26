@@ -1,0 +1,58 @@
+#!/bin/sh
+# Attach dist/*.zip and dist/*.EXE (dos-pack) to the forge release of this tag, creating
+# the release with RELEASE_NOTES.md as its body and "<title> <tag>" as its name when it has
+# none. Replaces an asset of the same name, so a re-run lands.
+#
+# Authenticates with GITEA_TOKEN, or with the credential Woodpecker gives every step
+# (CI_NETRC_PASSWORD); Gitea takes a personal token as `token …` and an OAuth one as
+# `Bearer …`, so the scheme is probed.
+set -eu
+DOS_STEP=dos-release
+. /usr/local/bin/dos-lib.sh
+
+FORGE="${FORGE_API:-https://git.teletypegames.org/api/v1}"
+REPO="${REPO:-${CI_REPO:-}}"
+TAG="${TAG:-${CI_COMMIT_TAG:-}}"
+DIST="${DIST:-dist}"
+NOTES="${NOTES:-RELEASE_NOTES.md}"
+TOKEN="${GITEA_TOKEN:-${CI_NETRC_PASSWORD:-}}"
+[ -n "$TOKEN" ] || die "no credential: set GITEA_TOKEN"
+[ -n "$REPO" ] || die "cannot work out the repository — set REPO=owner/name"
+[ -n "$TAG" ] || die "cannot work out the tag — set TAG=v1.2.3"
+
+AUTH=""
+for scheme in token Bearer; do
+  if curl -fsS -H "Authorization: $scheme $TOKEN" "$FORGE/user" >/dev/null 2>&1; then
+    AUTH="Authorization: $scheme $TOKEN"
+    break
+  fi
+done
+[ -n "$AUTH" ] || die "the credential was refused by $FORGE"
+api() { method="$1"; path="$2"; shift 2; curl -fsS -X "$method" -H "$AUTH" "$FORGE$path" "$@"; }
+
+LIST="$(mktemp)"
+trap 'rm -f "$LIST"' EXIT
+find "$DIST" -maxdepth 1 -type f \( -name '*.zip' -o -name '*.EXE' \) | sort > "$LIST"
+[ -s "$LIST" ] || die "no packages in $DIST (run dos-pack first)"
+
+release_id="$(curl -sS -H "$AUTH" "$FORGE/repos/$REPO/releases/tags/$TAG" | jq -r '.id // empty')"
+if [ -z "$release_id" ]; then
+  title="$(jq -r '.title // .name' metadata.json)"
+  notes=''
+  [ -f "$NOTES" ] && notes="$(cat "$NOTES")"
+  say "creating the release $title $TAG"
+  release_id="$(jq -n --arg tag "$TAG" --arg title "$title $TAG" --arg body "$notes" \
+      '{tag_name: $tag, name: $title, body: $body, draft: false, prerelease: false}' |
+    api POST "/repos/$REPO/releases" -H 'Content-Type: application/json' -d @- | jq -r '.id // empty')"
+  [ -n "$release_id" ] || die "the release for $TAG could not be created"
+fi
+
+while IFS= read -r asset; do
+  name="$(basename "$asset")"
+  for id in $(api GET "/repos/$REPO/releases/$release_id/assets" | jq -r --arg n "$name" '.[] | select(.name == $n) | .id'); do
+    api DELETE "/repos/$REPO/releases/$release_id/assets/$id" >/dev/null
+  done
+  say "uploading $name"
+  api POST "/repos/$REPO/releases/$release_id/assets?name=$(printf '%s' "$name" | jq -sRr @uri)" \
+    -F "attachment=@$asset" >/dev/null
+done < "$LIST"

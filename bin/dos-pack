@@ -1,0 +1,70 @@
+#!/bin/sh
+# Package a release from the built programs and metadata.json's "dos" block:
+#   dist/<FOLDER>-<tag>.zip       the folder as it is installed (dos.files)
+#   dist/<X>.EXE                  each executable alone, to update an installed copy by hand
+#   dist/store/<FOLDER>/          the folder for the FTP store: the files without the
+#                                 settings, an INFO.INI with the tag's version and the
+#                                 platform (DOS or WIN32), and FILES.LST ("crc32 size path")
+# and the same for the Win32 folder when there is one. When SOURCE/app/version.h has a
+# Version, it has to match the tag.
+#
+#   dos-pack                 the tag from Woodpecker (CI_COMMIT_TAG)
+#   TAG=v1.2.3 dos-pack
+set -eu
+DOS_STEP=dos-pack
+. /usr/local/bin/dos-lib.sh
+
+TAG="${TAG:-${CI_COMMIT_TAG:-}}"
+DIST="${DIST:-dist}"
+[ -n "$TAG" ] || die "cannot work out the tag — set TAG=v1.2.3"
+VERSION="${TAG#v}"
+
+if [ -f SOURCE/app/version.h ]; then
+  source_version="$(sed -n 's/^static const char Version\[\] = "\(.*\)";/\1/p' SOURCE/app/version.h)"
+  if [ -n "$source_version" ] && [ "$source_version" != "$VERSION" ]; then
+    die "the tag $TAG does not match Version $source_version in SOURCE/app/version.h"
+  fi
+fi
+
+files_list() {
+  (cd "$1" && find . -type f ! -name FILES.LST ! -name FILES.LST.new | sed 's|^\./||' | sort |
+    while IFS= read -r f; do
+      crc=$(gzip -c "$f" | tail -c 8 | od -An -tx4 -N4 | tr -d ' \n')
+      printf '%s %s %s\r\n' "$crc" "$(wc -c < "$f" | tr -d ' ')" "$f"
+    done) > "$1/FILES.LST.new"
+  mv "$1/FILES.LST.new" "$1/FILES.LST"
+}
+
+rm -rf "$DIST"
+mkdir -p "$DIST/store"
+settings="$(dos_key settings)"
+dos_targets | while read -r target folder; do
+  files="$(dos_target_key "$target" files)"
+  [ -n "$files" ] || die "metadata.json has no files for the $target folder $folder"
+  for f in $files; do [ -f "$f" ] || die "$f is not there — build first (dos-build)"; done
+
+  mkdir "$DIST/$folder"
+  # Copied, not regenerated, so .BAT and .CFG files keep their CRLF line ends.
+  cp $files "$DIST/$folder/"
+  (cd "$DIST" && zip -q -r "$folder-$TAG.zip" "$folder")
+  rm -rf "${DIST:?}/$folder"
+  for exe in $(dos_executables "$target"); do cp "$exe" "$DIST/"; done
+
+  store="$DIST/store/$folder"
+  mkdir "$store"
+  for f in $files; do
+    case " $(echo $settings) " in *" $f "*) continue ;; esac
+    cp "$f" "$store/"
+  done
+  name="$(dos_target_key "$target" store_name)"
+  description="$(dos_target_key "$target" store_description)"
+  [ -n "$name" ] || name="$folder"
+  platform="$(echo "$target" | tr '[:lower:]' '[:upper:]')"
+  printf '[program]\r\nname=%s\r\ndescription=%s\r\nversion=%s\r\nplatform=%s\r\n' \
+    "$name" "$description" "$VERSION" "$platform" > "$store/INFO.INI"
+  files_list "$store"
+  chmod -R a+rX "$store"
+done
+
+say "built:"
+find "$DIST" -type f | sort | while read -r f; do say "  $f ($(wc -c < "$f" | tr -d ' ') bytes)"; done

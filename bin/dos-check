@@ -1,0 +1,26 @@
+#!/bin/sh
+# The fast checks before the build, each where the repo has it: the code style
+# (SOURCE/lib/tools/format.sh --check SOURCE, DOSLIB's clang-format wrapper), the unit
+# tests on the host (SOURCE/test/unit/run.sh) and Python tests of a server side
+# (server/test).
+set -eu
+DOS_STEP=dos-check
+. /usr/local/bin/dos-lib.sh
+
+ran=0
+if [ -f SOURCE/lib/tools/format.sh ]; then
+  say "code style"
+  CLANG_FORMAT="${CLANG_FORMAT:-/opt/clang-format/bin/clang-format}" sh SOURCE/lib/tools/format.sh --check SOURCE
+  ran=1
+fi
+if [ -f SOURCE/test/unit/run.sh ]; then
+  say "unit tests"
+  sh SOURCE/test/unit/run.sh
+  ran=1
+fi
+if [ -d server/test ]; then
+  say "server tests"
+  python3 -m unittest discover -s server/test
+  ran=1
+fi
+[ "$ran" = 1 ] || say "nothing to check"

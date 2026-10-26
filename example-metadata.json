@@ -1,0 +1,20 @@
+{
+  "name": "myprog",
+  "title": "MYPROG",
+  "author": "Teletype Games",
+  "desc": "What the program does, in one line.",
+  "license": "MIT",
+  "category": "tool",
+  "repo": "https://git.teletypegames.org/dos/myprog",
+  "dos": {
+    "folder": "MYPROG",
+    "files": ["MYPROG.EXE", "MYPROG.CFG", "README.md", "LICENSE"],
+    "settings": ["MYPROG.CFG"],
+    "store_name": "My Program",
+    "store_description": "What the program does, in one line, for the DOSINST list.",
+    "win32_folder": "MYPROGW",
+    "win32_files": ["MYPROGW.EXE", "MYPROG.CFG", "README.md", "LICENSE"],
+    "win32_store_name": "My Program for Windows",
+    "win32_store_description": "MYPROG for Windows 95 and later."
+  }
+}
