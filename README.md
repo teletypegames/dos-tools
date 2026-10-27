@@ -5,8 +5,8 @@ same spirit as [c64-tools](../c64-tools): a program's repo holds a one-line
 `platform: dos` marker and a `metadata.json`, and everything the pipeline runs
 lives in the builder image.
 
-- `example-woodpecker.yaml` — the marker. The full pipeline (test → package →
-  release → artifact → publish → store) is served by the update server's
+- `example-woodpecker.yaml` — the marker. The full pipeline (version → test →
+  package → upload → publish → release) is served by the update server's
   Woodpecker configuration extension; preview it with
   `curl "https://teletypegames.org/build/config?platform=dos"`.
 - `example-metadata.json` — catalog metadata plus the `dos` block that says what
@@ -22,8 +22,8 @@ lives in the builder image.
 3. Have `SOURCE/build.sh` build the executables into the repo root with the Open
    Watcom in `$WATCOM`, and put the tests where the commands look for them.
 4. In Woodpecker, the global `application_token` and `gitea_token` secrets do the
-   catalog upload and the forge release; the FTP store copy needs the key named by
-   the marker's `store_secret` (default `deploy_ssh_key`).
+   catalog upload and the forge release. Nothing else: the FTP store is a WarpEngine
+   shelf, which the engine fills from the catalog on every publish.
 
 The version is the tag: `v1.2.3` releases 1.2.3. When `SOURCE/app/version.h` has a
 `Version`, it has to match the tag.
@@ -59,12 +59,16 @@ The version is the tag: `v1.2.3` releases 1.2.3. When `SOURCE/app/version.h` has
 | `dos-check` | test | the code style (`SOURCE/lib/tools/format.sh --check SOURCE`, DOSLIB's clang-format wrapper), the unit tests (`SOURCE/test/unit/run.sh`), the Python tests of a server side (`server/test`), each where the repo has it |
 | `dos-build` | test | `SOURCE/build.sh`, then every `.EXE` of the file lists must be there |
 | `dos-test` | test | `SOURCE/test/run.sh` (DOS, headless DOSBox Staging), `SOURCE/test/runw32.sh` (Win32 under Wine), `SOURCE/test/run.py` (DOSBox screen tests), each where the repo has it |
-| `dos-pack` | package (tag) | `dist/<FOLDER>-<tag>.zip`, each `.EXE` alone in `dist/`, and `dist/store/<FOLDER>/`: the files without the settings, an `INFO.INI` with the version and the platform (`DOS` or `WIN32`) and a `FILES.LST` (`crc32 size path`) that DOSINST checks downloads against |
-| `dos-release` | release (tag, `forge_release`) | the forge release of the tag with `RELEASE_NOTES.md` as its text and `dist/*.zip`, `dist/*.EXE` attached |
+| `dos-pack` | package (tag) | `dist/<FOLDER>-<tag>.zip` and each `.EXE` alone in `dist/`, listed in `.release-assets` for the pipeline's release step |
 
 The pipeline turns `dist/<FOLDER>-<tag>.zip` into the catalog's `cartridge` asset and
-the Win32 zip into `win_x86`, and its store step sends `dist/store/` to the FTP store
-(`ftp://ftp.teletypegames.org/APPS`), where DOSINST installs and updates from.
+the Win32 zip into `win_x86`, keeping the `dos` block in the uploaded metadata. The
+engine's shared release step attaches the files of `.release-assets` to the forge
+release, with `RELEASE_NOTES.md` as its text. The FTP store
+(`ftp://ftp.teletypegames.org/APPS`), where DOSINST installs and updates from, is the
+engine's `folders` shelf: from the zip and the `dos` block it writes each folder
+without the settings, with an `INFO.INI` (name, description, version, platform `DOS` or
+`WIN32`) and a `FILES.LST` (`crc32 size path`) that DOSINST checks downloads against.
 
 Try it on a program locally:
 

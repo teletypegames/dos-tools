@@ -6,7 +6,7 @@
 #     deliberately not on the PATH, run.py would otherwise pick it
 #   - Wine 32-bit (the Win32 tests), g++ (unit tests), python3 + pyftpdlib (test FTP
 #     server), clang-format in /opt/clang-format, zip/unzip/jq/curl
-#   - bin/dos-{check,build,test,pack,release}: the pipeline's steps (see README.md)
+#   - bin/dos-{check,build,test,pack}: the pipeline's steps (see README.md)
 # The pinned versions are listed in /opt/dos-ci/versions.
 #
 # Build & push (the CI runner is linux/amd64):

@@ -3,8 +3,8 @@
 #   "dos": {
 #     "folder": "DOSINST",                       the folder the program is installed as
 #     "files": ["DOSINST.EXE", "DOSINST.CFG", "README.md", "LICENSE"],
-#     "settings": ["DOSINST.CFG"],               in the release zip, never in a store update
-#     "store_name": "DOSInst Store",             INFO.INI name= in the FTP store
+#     "settings": ["DOSINST.CFG"],               in the release zip, never in a store update (the shelf's)
+#     "store_name": "DOSInst Store",             INFO.INI name= in the FTP store (the WarpEngine writes it)
 #     "store_description": "...",                INFO.INI description=
 #     "win32_folder": "DOSINSTW",                optional: the Win32 build, the same keys
 #     "win32_files": [...], "win32_store_name": "...", "win32_store_description": "..."

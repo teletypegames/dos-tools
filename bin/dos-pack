@@ -2,11 +2,10 @@
 # Package a release from the built programs and metadata.json's "dos" block:
 #   dist/<FOLDER>-<tag>.zip       the folder as it is installed (dos.files)
 #   dist/<X>.EXE                  each executable alone, to update an installed copy by hand
-#   dist/store/<FOLDER>/          the folder for the FTP store: the files without the
-#                                 settings, an INFO.INI with the tag's version and the
-#                                 platform (DOS or WIN32), and FILES.LST ("crc32 size path")
-# and the same for the Win32 folder when there is one. When SOURCE/app/version.h has a
-# Version, it has to match the tag.
+# and the same for the Win32 folder when there is one, and list them in .release-assets,
+# the files the pipeline's release step attaches. The FTP store is not built here: the
+# WarpEngine's folders shelf makes it from the zip and the dos block. When
+# SOURCE/app/version.h has a Version, it has to match the tag.
 #
 #   dos-pack                 the tag from Woodpecker (CI_COMMIT_TAG)
 #   TAG=v1.2.3 dos-pack
@@ -26,18 +25,8 @@ if [ -f SOURCE/app/version.h ]; then
   fi
 fi
 
-files_list() {
-  (cd "$1" && find . -type f ! -name FILES.LST ! -name FILES.LST.new | sed 's|^\./||' | sort |
-    while IFS= read -r f; do
-      crc=$(gzip -c "$f" | tail -c 8 | od -An -tx4 -N4 | tr -d ' \n')
-      printf '%s %s %s\r\n' "$crc" "$(wc -c < "$f" | tr -d ' ')" "$f"
-    done) > "$1/FILES.LST.new"
-  mv "$1/FILES.LST.new" "$1/FILES.LST"
-}
-
 rm -rf "$DIST"
-mkdir -p "$DIST/store"
-settings="$(dos_key settings)"
+mkdir -p "$DIST"
 dos_targets | while read -r target folder; do
   files="$(dos_target_key "$target" files)"
   [ -n "$files" ] || die "metadata.json has no files for the $target folder $folder"
@@ -49,22 +38,9 @@ dos_targets | while read -r target folder; do
   (cd "$DIST" && zip -q -r "$folder-$TAG.zip" "$folder")
   rm -rf "${DIST:?}/$folder"
   for exe in $(dos_executables "$target"); do cp "$exe" "$DIST/"; done
-
-  store="$DIST/store/$folder"
-  mkdir "$store"
-  for f in $files; do
-    case " $(echo $settings) " in *" $f "*) continue ;; esac
-    cp "$f" "$store/"
-  done
-  name="$(dos_target_key "$target" store_name)"
-  description="$(dos_target_key "$target" store_description)"
-  [ -n "$name" ] || name="$folder"
-  platform="$(echo "$target" | tr '[:lower:]' '[:upper:]')"
-  printf '[program]\r\nname=%s\r\ndescription=%s\r\nversion=%s\r\nplatform=%s\r\n' \
-    "$name" "$description" "$VERSION" "$platform" > "$store/INFO.INI"
-  files_list "$store"
-  chmod -R a+rX "$store"
 done
+
+find "$DIST" -maxdepth 1 -type f \( -name '*.zip' -o -name '*.EXE' \) | sort > .release-assets
 
 say "built:"
 find "$DIST" -type f | sort | while read -r f; do say "  $f ($(wc -c < "$f" | tr -d ' ') bytes)"; done
