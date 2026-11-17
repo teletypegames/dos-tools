@@ -8,9 +8,12 @@ DOS_STEP=dos-build
 [ -f SOURCE/build.sh ] || die "no SOURCE/build.sh"
 WATCOM="${WATCOM:-/opt/watcom}" sh SOURCE/build.sh
 
-dos_targets | while read -r target folder; do
+targets="$(dos_targets)"
+while read -r target folder; do
   for exe in $(dos_executables "$target"); do
     [ -s "$exe" ] || die "$exe was not built"
     say "$exe: $(wc -c < "$exe" | tr -d ' ') bytes"
   done
-done
+done <<EOF
+$targets
+EOF

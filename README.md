@@ -11,6 +11,9 @@ lives in the builder image.
   `curl "https://teletypegames.org/build/config?platform=dos"`.
 - `example-metadata.json` — catalog metadata plus the `dos` block that says what
   a release holds (below).
+- `hello/` and `warp-template.json` — the Hello World a new project starts from
+  (*WarpEngine: New Game* in the toolbox copies `hello/hello.c` and `hello/build.sh` to
+  `SOURCE/`); it builds `<FOLDER>.EXE`, which prints `HELLO WORLD`.
 - `builder.Dockerfile` — the builder image,
   `git.teletypegames.org/build/dos-builder`, with the commands in `bin/`.
 
@@ -51,6 +54,10 @@ The version is the tag: `v1.2.3` releases 1.2.3. When `SOURCE/app/version.h` has
 | `settings` | files that are in the release zip but never in a store update, so an update keeps an installed program's configuration |
 | `store_name`, `store_description` | the `INFO.INI` the DOSINST list shows |
 | `win32_*` | the same for a Win32 build (optional) |
+
+Without a `dos` block (a new project, whose `metadata.json` the toolbox writes) the
+commands fill one in from the name: `hello-world` becomes the folder `HELLOWOR` with
+`HELLOWOR.EXE` and `README.md`. Edit it in `metadata.json` once the program needs more.
 
 ## The commands
 

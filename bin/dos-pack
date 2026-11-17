@@ -27,7 +27,8 @@ fi
 
 rm -rf "$DIST"
 mkdir -p "$DIST"
-dos_targets | while read -r target folder; do
+targets="$(dos_targets)"
+while read -r target folder; do
   files="$(dos_target_key "$target" files)"
   [ -n "$files" ] || die "metadata.json has no files for the $target folder $folder"
   for f in $files; do [ -f "$f" ] || die "$f is not there — build first (dos-build)"; done
@@ -38,7 +39,9 @@ dos_targets | while read -r target folder; do
   (cd "$DIST" && zip -q -r "$folder-$TAG.zip" "$folder")
   rm -rf "${DIST:?}/$folder"
   for exe in $(dos_executables "$target"); do cp "$exe" "$DIST/"; done
-done
+done <<EOF
+$targets
+EOF
 
 find "$DIST" -maxdepth 1 -type f \( -name '*.zip' -o -name '*.EXE' \) | sort > .release-assets
 

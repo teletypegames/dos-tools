@@ -1,0 +1,6 @@
+{
+  "files": {
+    "hello/hello.c": "SOURCE/hello.c",
+    "hello/build.sh": "SOURCE/build.sh"
+  }
+}
