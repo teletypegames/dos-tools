@@ -30,6 +30,7 @@ so a computer with only Docker builds with the same toolchain as the pipeline.
 The tasks of `example-devcontainer-tasks.json` are merged into
 `.vscode/tasks.json`: `dev image` builds the container image, `play` builds the
 game and plays it in the host's web runtime. The dev container adds `make` for the template's `Makefile`, whose targets are the pipeline's steps: `build` (`dos-check`, `dos-build`, then `dos-pack` into `dist/`, the zip `play` runs in EmulatorJS), `test` (`dos-test`) and `run` (a local DOSBox — `run (DOSBox)` builds in the container and runs here).
+The container editor gets its extensions from `example-devcontainer.json`: the WarpEngine Toolbox, Makefile Tools (its configure prompts off; the Toolbox tasks build) and the C/C++ extension for the Open Watcom sources.
 For an existing game repo, *WarpEngine: Add Dev Container* adds it and merges
 the tasks, keeping yours.
 
