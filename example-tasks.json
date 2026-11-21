@@ -1,0 +1,25 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "detail": "Builds the program and packs the release zip into dist/",
+      "type": "warpengine",
+      "target": "build",
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "test",
+      "detail": "Runs the program's tests (dos-test)",
+      "type": "warpengine",
+      "target": "test"
+    },
+    {
+      "label": "run (DOSBox)",
+      "detail": "Runs the program in DOSBox on this computer: needs a local dosbox, does not run in the dev container",
+      "type": "warpengine",
+      "target": "run",
+      "host": true
+    }
+  ]
+}

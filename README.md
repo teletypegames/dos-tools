@@ -14,8 +14,24 @@ lives in the builder image.
 - `hello/` and `warp-template.json` — the Hello World a new project starts from
   (*WarpEngine: New Game* in the toolbox copies `hello/hello.c` and `hello/build.sh` to
   `SOURCE/`); it builds `<FOLDER>.EXE`, which prints `HELLO WORLD`.
+- `example-makefile.make`, `example-tasks.json` — the `Makefile` and VS Code
+  tasks a new project gets: the pipeline's steps (`build`, `test`) with the
+  builder image's commands, and `run (DOSBox)`.
 - `builder.Dockerfile` — the builder image,
   `git.teletypegames.org/build/dos-builder`, with the commands in `bin/`.
+
+## Dev container
+
+`warp-template.json` has a `devcontainer` key that the WarpEngine Toolbox reads
+(an older toolbox ignores it): a new project gets `.devcontainer/` from
+`example-devcontainer.json` and `example-devcontainer.Dockerfile` — the CI
+builder image the host names (`{builderImage}`) plus git and a `dev` user —
+so a computer with only Docker builds with the same toolchain as the pipeline.
+The tasks of `example-devcontainer-tasks.json` are merged into
+`.vscode/tasks.json`: `dev image` builds the container image, `play` builds the
+game and plays it in the host's web runtime. The dev container adds `make` for the template's `Makefile`, whose targets are the pipeline's steps: `build` (`dos-check`, `dos-build`, then `dos-pack` into `dist/`, the zip `play` runs in EmulatorJS), `test` (`dos-test`) and `run` (a local DOSBox — `run (DOSBox)` builds in the container and runs here).
+For an existing game repo, *WarpEngine: Add Dev Container* adds it and merges
+the tasks, keeping yours.
 
 ## Usage in a program's repo
 
