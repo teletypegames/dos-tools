@@ -52,15 +52,15 @@ The version is the tag: `v1.2.3` releases 1.2.3. When `SOURCE/app/version.h` has
 
 ```json
 "dos": {
-  "folder": "DOSINST",
-  "files": ["DOSINST.EXE", "DOSINST.CFG", "README.md", "LICENSE"],
-  "settings": ["DOSINST.CFG"],
-  "store_name": "DOSInst Store",
+  "folder": "WEDOS",
+  "files": ["WEDOS.EXE", "WEDOS.CFG", "README.md", "LICENSE"],
+  "settings": ["WEDOS.CFG"],
+  "store_name": "WEDOS Store",
   "store_description": "Installs, updates and removes DOS programs from this store.",
-  "win32_folder": "DOSINSTW",
-  "win32_files": ["DOSINSTW.EXE", "DOSINST.CFG", "README.md", "LICENSE"],
-  "win32_store_name": "DOSInst Store for Windows",
-  "win32_store_description": "DOSINST for Windows 95 and later."
+  "win32_folder": "WEDOSW",
+  "win32_files": ["WEDOSW.EXE", "WEDOS.CFG", "README.md", "LICENSE"],
+  "win32_store_name": "WEDOS Store for Windows",
+  "win32_store_description": "WEDOS for Windows 95 and later."
 }
 ```
 
@@ -69,7 +69,7 @@ The version is the tag: `v1.2.3` releases 1.2.3. When `SOURCE/app/version.h` has
 | `folder` | the folder the program is installed as (DOS 8.3, upper case) |
 | `files` | what goes into it, from the repo root; files are copied, so `.BAT` and `.CFG` keep their CRLF line ends |
 | `settings` | files that are in the release zip but never in a store update, so an update keeps an installed program's configuration |
-| `store_name`, `store_description` | the `INFO.INI` the DOSINST list shows |
+| `store_name`, `store_description` | the `INFO.INI` the WEDOS list shows |
 | `win32_*` | the same for a Win32 build (optional) |
 
 Without a `dos` block (a new project, whose `metadata.json` the toolbox writes) the
@@ -89,10 +89,10 @@ The pipeline turns `dist/<FOLDER>-<tag>.zip` into the catalog's `cartridge` asse
 the Win32 zip into `win_x86`, keeping the `dos` block in the uploaded metadata. The
 engine's shared release step attaches the files of `.release-assets` to the forge
 release, with `RELEASE_NOTES.md` as its text. The FTP store
-(`ftp://ftp.teletypegames.org/APPS`), where DOSINST installs and updates from, is the
+(`ftp://ftp.teletypegames.org/APPS`), where WEDOS installs and updates from, is the
 engine's `folders` shelf: from the zip and the `dos` block it writes each folder
 without the settings, with an `INFO.INI` (name, description, version, platform `DOS` or
-`WIN32`) and a `FILES.LST` (`crc32 size path`) that DOSINST checks downloads against.
+`WIN32`) and a `FILES.LST` (`crc32 size path`) that WEDOS checks downloads against.
 
 Try it on a program locally:
 

@@ -11,7 +11,7 @@
     "files": ["MYPROG.EXE", "MYPROG.CFG", "README.md", "LICENSE"],
     "settings": ["MYPROG.CFG"],
     "store_name": "My Program",
-    "store_description": "What the program does, in one line, for the DOSINST list.",
+    "store_description": "What the program does, in one line, for the WEDOS list.",
     "win32_folder": "MYPROGW",
     "win32_files": ["MYPROGW.EXE", "MYPROG.CFG", "README.md", "LICENSE"],
     "win32_store_name": "My Program for Windows",
