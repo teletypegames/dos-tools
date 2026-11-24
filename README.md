@@ -5,18 +5,19 @@ same spirit as [c64-tools](../c64-tools): a program's repo holds a one-line
 `platform: dos` marker and a `metadata.json`, and everything the pipeline runs
 lives in the builder image.
 
-- `example-woodpecker.yaml` — the marker. The full pipeline (version → test →
+- `.woodpecker.yaml` (written by New Game, not kept here) — the marker
+  (`platform: dos`). The full pipeline (version → test →
   package → upload → publish → release) is served by the update server's
   Woodpecker configuration extension; preview it with
   `curl "https://teletypegames.org/build/config?platform=dos"`.
-- `example-metadata.json` — catalog metadata plus the `dos` block that says what
-  a release holds (below).
+- `metadata.json` (written by New Game, not kept here) — catalog metadata plus
+  the `dos` block that says what a release holds (below).
 - `hello/` and `warp-template.json` — the Hello World a new project starts from
   (*WarpEngine: New Game* in the toolbox copies `hello/hello.c` and `hello/build.sh` to
   `SOURCE/`); it builds `<FOLDER>.EXE`, which prints `HELLO WORLD`.
 - `example-makefile.make`, `example-tasks.json` — the `Makefile` and VS Code
-  tasks a new project gets: the pipeline's steps (`build`, `test`) with the
-  builder image's commands, and `run (DOSBox)`.
+  tasks a new project gets: the pipeline's steps (`build`, `check`, `test`) with
+  the builder image's commands, and `run (DOSBox)`.
 - `builder.Dockerfile` — the builder image,
   `git.teletypegames.org/build/dos-builder`, with the commands in `bin/`.
 
@@ -34,11 +35,19 @@ The container editor gets its extensions from `example-devcontainer.json`: the W
 For an existing game repo, *WarpEngine: Add Dev Container* adds it and merges
 the tasks, keeping yours.
 
+## Makefile contract
+
+The Makefile has the targets every WarpEngine template shares: `build`, `run`, `check` (the CI's check step runs it in the builder image),
+`clean`. `warp-engine check makefile` of the
+[WarpEngine CLI](https://wiki.teletypegames.org/godoc/warp-engine-cli/latest/cmd/warp-engine/)
+checks a project against it. `check` is `dos-check`; the web version is the release zip in the
+host's EmulatorJS runtime, so there is no `web` target.
+
 ## Usage in a program's repo
 
-1. Copy `example-woodpecker.yaml` to `.woodpecker.yaml` (add `name:` when the
+1. Create `.woodpecker.yaml` with the line `platform: dos` (add `name:` when the
    software name differs from the repo name).
-2. Copy `example-metadata.json` to `metadata.json` and fill it in.
+2. Create `metadata.json` with the catalog keys and the `dos` block (below).
 3. Have `SOURCE/build.sh` build the executables into the repo root with the Open
    Watcom in `$WATCOM`, and put the tests where the commands look for them.
 4. In Woodpecker, the global `application_token` and `gitea_token` secrets do the

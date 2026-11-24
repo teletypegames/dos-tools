@@ -19,6 +19,9 @@ build:
 	dos-build
 	TAG=v$(or $(VERSION),0.0.0) dos-pack
 
+check:
+	dos-check
+
 test: build
 	dos-test
 
@@ -29,4 +32,4 @@ run:
 clean:
 	rm -rf dist SOURCE/build .release-assets
 
-.PHONY: all build test run clean
+.PHONY: all build check test run clean
